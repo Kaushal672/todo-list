@@ -1,50 +1,23 @@
 package todoHandlers
 
 import (
-	"encoding/json"
 	"net/http"
-	"todo-list/models"
 	"todo-list/services"
 	"todo-list/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetAllTodo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		utils.HandleError(w, "Invalid method", http.StatusMethodNotAllowed)
-		return
-	}
+func GetAllTodo(c *gin.Context) {
 
-	userId := r.Context().Value("userId").(int)
+	userId := c.GetInt("userId")
 
-	rows, err := services.GetAllTodo(userId)
+	result, err := services.GetAllTodo(userId)
 
 	if err != nil {
-		utils.HandleError(w, err.Error(), http.StatusInternalServerError)
+		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var result = []*models.Todo{}
-
-	for rows.Next() {
-		todo := new(models.Todo)
-		rows.Scan(
-			&todo.TodoId,
-			&todo.Title,
-			&todo.Status,
-			&todo.UserId,
-			&todo.CreatedAt,
-			&todo.UpdatedAt,
-		)
-
-		result = append(result, todo)
-	}
-
-	jsonRes, err := json.Marshal(result)
-
-	if err != nil {
-		utils.HandleError(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonRes)
+	c.JSON(http.StatusOK, result)
 }

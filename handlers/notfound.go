@@ -3,8 +3,10 @@ package handlers
 import (
 	"net/http"
 	"todo-list/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
-	utils.HandleError(w, "Not found", http.StatusNotFound)
+func NotFound(c *gin.Context) {
+	utils.HandleError(c, "Not found", http.StatusNotFound)
 }

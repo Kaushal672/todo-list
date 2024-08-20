@@ -1,15 +1,12 @@
 package utils
 
 import (
-	"encoding/json"
-	"net/http"
 	"todo-list/models"
+
+	"github.com/gin-gonic/gin"
 )
 
-func HandleError(w http.ResponseWriter, message string, status int) {
+func HandleError(c *gin.Context, message string, status int) {
 	e := models.Error{Message: message}
-	jsonRes, _ := json.Marshal(e)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(jsonRes)
+	c.JSON(status, e)
 }

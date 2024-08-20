@@ -1,62 +1,52 @@
 package todoHandlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"todo-list/models"
 	"todo-list/services"
 
 	"todo-list/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
-func CreateTodo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		utils.HandleError(w, "Invalid method", http.StatusMethodNotAllowed)
-		return
-	}
+func CreateTodo(c *gin.Context) {
 
-	todo := new(models.Todo)
-	err := json.NewDecoder(r.Body).Decode(&todo)
-	defer r.Body.Close()
-	if err != nil {
-		utils.HandleError(w, "Error while parsing json body", http.StatusUnprocessableEntity)
+	todo := &models.Todo{}
+
+	if err := c.ShouldBindJSON(todo); err != nil {
+		utils.HandleError(c, "Error while parsing json body", http.StatusUnprocessableEntity)
 		return
 	}
 
 	//validate request body
 	if utils.IsEmpty(todo.Title) {
-		utils.HandleError(w, "Title is required", http.StatusBadRequest)
+		utils.HandleError(c, "Title is required", http.StatusBadRequest)
 		return
 	}
 	if utils.IsEmpty(todo.Status) {
-		utils.HandleError(w, "Status is required", http.StatusBadRequest)
+		utils.HandleError(c, "Status is required", http.StatusBadRequest)
 		return
 	}
 
 	if !utils.IsLength(todo.Title, 5, 50) {
-		utils.HandleError(w, "Todo title too short", http.StatusBadRequest)
+		utils.HandleError(c, "Todo title too short", http.StatusBadRequest)
 		return
 	}
 	if !utils.Contains([]string{"not_started", "in_progress", "completed"}, todo.Status) {
-		utils.HandleError(w, "Invalid progress status", http.StatusBadRequest)
+		utils.HandleError(c, "Invalid progress status", http.StatusBadRequest)
 		return
 	}
 
-	userId := r.Context().Value("userId").(int)
+	userId := c.GetInt("userId")
 
-	err = services.AddTodo(todo, userId)
+	err := services.AddTodo(todo, userId)
 
 	if err != nil {
-		utils.HandleError(w, err.Error(), http.StatusInternalServerError)
+		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	jsonResponse, err := json.Marshal(models.Response{Message: "Todo created successfully"})
-
-	if err != nil {
-		utils.HandleError(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	response := models.Response{Message: "Todo created successfully"}
+	c.JSON(http.StatusOK, response)
 }

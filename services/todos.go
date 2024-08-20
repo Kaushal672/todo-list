@@ -1,7 +1,6 @@
 package services
 
 import (
-	"database/sql"
 	"todo-list/database"
 	"todo-list/models"
 )
@@ -32,20 +31,41 @@ func GetTodo(todoId int, storedTodo *models.Todo) error {
 	return err
 }
 
-func UpdateTodo(todo *models.Todo) error {
+func UpdateTodo(todo *models.Todo, todoId int) error {
 	_, err := database.DB.Exec(
 		"UPDATE todos SET title = $1, currentStatus = $2, updatedAt = CURRENT_TIMESTAMP WHERE todoId = $3",
 		todo.Title,
 		todo.Status,
-		todo.TodoId,
+		todoId,
 	)
 	return err
 }
 
-func GetAllTodo(userId int) (*sql.Rows, error) {
+func GetAllTodo(userId int) ([]*models.Todo, error) {
 	rows, err := database.DB.Query(
 		"SELECT todoId, title, currentStatus, userId, createdAt, updatedAt FROM todos WHERE userId = $1",
 		userId,
 	)
-	return rows, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result = []*models.Todo{}
+
+	for rows.Next() {
+		todo := &models.Todo{}
+		rows.Scan(
+			&todo.TodoId,
+			&todo.Title,
+			&todo.Status,
+			&todo.UserId,
+			&todo.CreatedAt,
+			&todo.UpdatedAt,
+		)
+
+		result = append(result, todo)
+	}
+
+	return result, nil
 }
