@@ -1,7 +1,14 @@
 package models
 
+import (
+	"database/sql"
+	"time"
+)
+
 type User struct {
-	UID      int    `json:"u_id"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	UserId    int          `json:"userId"`
+	Name      string       `json:"name"`
+	Password  string       `json:"password"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt sql.NullTime `json:"updatedAt"`
 }

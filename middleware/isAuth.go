@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"todo-list/utils"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -14,23 +16,27 @@ func IsAuth(next http.Handler) http.Handler {
 		tokenString := r.Header.Get("Authorization")
 		userTokenArr := strings.Split(tokenString, " ")
 		if len(userTokenArr) < 2 {
-			http.Error(w, "Token not found", http.StatusUnauthorized)
+			utils.HandleError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		token, err := jwt.Parse(userTokenArr[1], func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+			}
+
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			utils.HandleError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 
 		if !ok {
-			http.Error(w, "Invalid claims", http.StatusUnauthorized)
+			utils.HandleError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
