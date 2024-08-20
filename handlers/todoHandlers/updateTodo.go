@@ -12,36 +12,12 @@ import (
 )
 
 func UpdateTodo(c *gin.Context) {
-
-	todo := &models.Todo{}
-
-	if err := c.ShouldBindJSON(todo); err != nil {
-		utils.HandleError(c, "Error while parsing json body", http.StatusUnprocessableEntity)
-		return
-	}
+	t, _ := c.Get("todo")
+	todo := t.(*models.Todo)
 
 	todoId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		utils.HandleError(c, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	//validate request body
-	if utils.IsEmpty(todo.Title) {
-		utils.HandleError(c, "Title is required", http.StatusBadRequest)
-		return
-	}
-	if utils.IsEmpty(todo.Status) {
-		utils.HandleError(c, "Status is required", http.StatusBadRequest)
-		return
-	}
-
-	if !utils.IsLength(todo.Title, 5, 50) {
-		utils.HandleError(c, "Todo title too short", http.StatusBadRequest)
-		return
-	}
-	if !utils.Contains([]string{"not_started", "in_progress", "completed"}, todo.Status) {
-		utils.HandleError(c, "Invalid progress status", http.StatusBadRequest)
 		return
 	}
 

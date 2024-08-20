@@ -14,47 +14,15 @@ import (
 )
 
 func Login(c *gin.Context) {
-	user := &models.User{}
-
-	if err := c.ShouldBindJSON(user); err != nil {
-		utils.HandleError(c, "Error while parsing json body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	//validate request body
-	if utils.IsEmpty(user.Name) {
-		utils.HandleError(c, "Username is required", http.StatusBadRequest)
-		return
-	}
-	if utils.IsEmpty(user.Password) {
-		utils.HandleError(c, "Password is required", http.StatusBadRequest)
-		return
-	}
-
-	if !utils.IsLength(user.Name, 8, 20) {
-		utils.HandleError(
-			c,
-			"Username must have atleast 8 and atmost 20 characters",
-			http.StatusBadRequest,
-		)
-		return
-	}
-
-	if !utils.ValidPassword(user.Password) {
-		utils.HandleError(
-			c,
-			"Password must be valid with atleast one upper case, one lower case, one special character(!, @, $, &), one digit with atleast 8 and atmost 16 characters",
-			http.StatusBadRequest,
-		)
-		return
-	}
+	u, _ := c.Get("user")
+	user := u.(*models.User)
 
 	storedUser := &models.User{}
 	// get the registered user data
 	err := services.GetUser(user, storedUser)
 
 	if err == sql.ErrNoRows { // check if user not found
-		utils.HandleError(c, "Username or password is incorrect", http.StatusNotFound)
+		utils.HandleError(c, "Username or password is incorrect", http.StatusUnauthorized)
 		return
 	} else if err != nil {
 		utils.HandleError(c, err.Error(), http.StatusInternalServerError)

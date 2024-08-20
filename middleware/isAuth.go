@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"todo-list/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -16,8 +15,7 @@ func IsAuth(c *gin.Context) {
 	userTokenArr := strings.Split(tokenString, " ")
 
 	if len(userTokenArr) < 2 {
-		utils.HandleError(c, "Unauthorized", http.StatusUnauthorized)
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		return
 	}
 
@@ -30,16 +28,14 @@ func IsAuth(c *gin.Context) {
 	})
 
 	if err != nil {
-		utils.HandleError(c, "Unauthorized", http.StatusUnauthorized)
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		return
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok {
-		utils.HandleError(c, "Unauthorized", http.StatusUnauthorized)
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 		return
 	}
 
