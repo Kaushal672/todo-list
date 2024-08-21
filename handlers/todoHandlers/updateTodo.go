@@ -47,5 +47,5 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Response{Message: "Todo updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Todo updated successfully"})
 }

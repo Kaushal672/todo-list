@@ -50,6 +50,5 @@ func Login(c *gin.Context) {
 	}
 
 	// create response body
-	response := models.AuthResponse{Message: "User logged in successfully", Token: tokenString}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{"message": "User logged in successfully", "token": tokenString})
 }

@@ -44,5 +44,5 @@ func DeleteTodo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Response{Message: "Succesfully deleted todo"})
+	c.JSON(http.StatusOK, gin.H{"message": "Succesfully deleted todo"})
 }

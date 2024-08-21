@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"todo-list/models"
 	"todo-list/services"
-
 	"todo-list/utils"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +22,5 @@ func CreateTodo(c *gin.Context) {
 		return
 	}
 
-	response := models.Response{Message: "Todo created successfully"}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{"message": "Todo created successfully"})
 }

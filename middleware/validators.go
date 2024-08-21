@@ -48,7 +48,6 @@ func AuthBodyValidator(c *gin.Context) {
 	}
 
 	c.Set("user", user)
-
 	c.Next()
 }
 

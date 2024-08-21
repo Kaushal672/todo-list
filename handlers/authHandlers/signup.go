@@ -26,6 +26,5 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	response := models.Response{Message: "User signup successfull"}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{"message": "User signup successfull"})
 }
