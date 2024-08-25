@@ -7,11 +7,12 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-func ConnectToDB() {
+func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading env file")
 	}
