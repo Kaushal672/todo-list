@@ -1,1 +1,0 @@
-CREATE TYPE status AS ENUM ('not_started', 'in_progress', 'completed');

@@ -1,3 +1,5 @@
+CREATE TYPE status AS ENUM ('not_started', 'in_progress', 'completed');
+
 CREATE TABLE todos (
 	todoId SERIAL PRIMARY KEY,
 	title TEXT NOT NULL,
