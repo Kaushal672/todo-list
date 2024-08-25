@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+	"log"
 	"todo-list/database"
 	"todo-list/models"
 )
@@ -12,33 +14,65 @@ func AddTodo(todo *models.Todo, userId int) error {
 		todo.Status,
 		userId,
 	)
-	return err
+
+	if err == nil {
+		return nil
+	}
+
+	return models.ErrAddTodo
 }
 
-func DeleteTodo(todoId int) error {
-	_, err := database.DB.Exec("DELETE FROM todos WHERE todoId = $1", todoId)
-	return err
+func DeleteTodo(todoId int, userId int) error {
+	_, err := database.DB.Exec(
+		"DELETE FROM todos WHERE todoId = $1 AND userId = $2",
+		todoId,
+		userId,
+	)
+
+	if err == nil {
+		return nil
+	}
+
+	return models.ErrDeleteTodo
 }
 
-func GetTodo(todoId int, storedTodo *models.Todo) error {
-	err := database.DB.QueryRow("SELECT todoId, title, currentStatus, userId, createdAt, updatedAt FROM todos WHERE todoId = $1", todoId).
+func GetTodo(todoId int, userId int, storedTodo *models.Todo) error {
+	err := database.DB.QueryRow("SELECT todoId, title, currentStatus, userId, createdAt, updatedAt FROM todos WHERE todoId = $1 AND userId = $2", todoId, userId).
 		Scan(&storedTodo.TodoId,
 			&storedTodo.Title,
 			&storedTodo.Status,
 			&storedTodo.UserId,
 			&storedTodo.CreatedAt,
 			&storedTodo.UpdatedAt)
-	return err
+
+	if err == nil {
+		return nil
+	}
+
+	var e error
+	if err == sql.ErrNoRows {
+		e = models.ErrTodoNotFound
+	} else {
+		e = models.ErrGetTodo
+	}
+	log.Println(e)
+	return e // check for err no rows, categorize the error, client should get generic error
 }
 
-func UpdateTodo(todo *models.Todo, todoId int) error {
+func UpdateTodo(todo *models.Todo, todoId int, userId int) error {
 	_, err := database.DB.Exec(
-		"UPDATE todos SET title = $1, currentStatus = $2, updatedAt = CURRENT_TIMESTAMP WHERE todoId = $3",
+		"UPDATE todos SET title = $1, currentStatus = $2, updatedAt = CURRENT_TIMESTAMP WHERE todoId = $3 AND userId = $4",
 		todo.Title,
 		todo.Status,
 		todoId,
+		userId,
 	)
-	return err
+
+	if err == nil {
+		return nil
+	}
+
+	return models.ErrUpdateTodo
 }
 
 func GetAllTodo(userId int) ([]*models.Todo, error) {
@@ -48,14 +82,16 @@ func GetAllTodo(userId int) ([]*models.Todo, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, models.ErrGetAllTodo
 	}
+
+	defer rows.Close()
 
 	var result = []*models.Todo{}
 
 	for rows.Next() {
 		todo := &models.Todo{}
-		rows.Scan(
+		err := rows.Scan(
 			&todo.TodoId,
 			&todo.Title,
 			&todo.Status,
@@ -64,8 +100,14 @@ func GetAllTodo(userId int) ([]*models.Todo, error) {
 			&todo.UpdatedAt,
 		)
 
+		if err != nil {
+			return nil, models.ErrGetAllTodo
+		}
 		result = append(result, todo)
 	}
 
+	if rows.Err() != nil {
+		return nil, models.ErrGetAllTodo
+	}
 	return result, nil
 }

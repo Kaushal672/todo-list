@@ -1,8 +1,12 @@
 package services
 
 import (
+	"database/sql"
+	"log"
 	"todo-list/database"
 	"todo-list/models"
+
+	"github.com/lib/pq"
 )
 
 func GetUser(user *models.User, storedUser *models.User) error {
@@ -12,7 +16,20 @@ func GetUser(user *models.User, storedUser *models.User) error {
 			&storedUser.Password,
 			&storedUser.CreatedAt,
 			&storedUser.UpdatedAt)
-	return err
+
+	if err == nil {
+		return nil
+	}
+
+	var e error
+	if err == sql.ErrNoRows {
+		e = models.ErrUserNotFound
+	} else {
+		e = models.ErrGetUser
+	}
+
+	log.Println(e)
+	return e
 }
 
 func AddUser(user *models.User) error {
@@ -21,5 +38,18 @@ func AddUser(user *models.User) error {
 		user.Name,
 		user.Password,
 	)
-	return err
+
+	if err == nil {
+		return nil
+	}
+
+	var e error
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+		e = models.ErrDuplicateUniqueKey
+	} else {
+		e = models.ErrAddUser
+	}
+
+	log.Println(e)
+	return e
 }
