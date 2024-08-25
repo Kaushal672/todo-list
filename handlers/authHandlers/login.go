@@ -1,36 +1,56 @@
 package authHandlers
 
 import (
-	"database/sql"
+	"errors"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	"todo-list/models"
 	"todo-list/services"
 	"todo-list/utils"
+	"todo-list/validators"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Login(c *gin.Context) {
-	u, _ := c.Get("user")
-	user := u.(*models.User)
+
+	user := &models.User{}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "could not parse json body"})
+		return
+	}
+
+	user.Name = strings.TrimSpace(user.Name)
+	user.Password = strings.TrimSpace(user.Password)
+
+	if err := validators.Validate.Struct(user); err != nil {
+		errs := err.(validator.ValidationErrors)
+		c.JSON(http.StatusBadRequest, utils.FormatValidationError(errs))
+		return
+	}
 
 	storedUser := &models.User{}
 	// get the registered user data
 	err := services.GetUser(user, storedUser)
 
-	if err == sql.ErrNoRows { // check if user not found
-		utils.HandleError(c, "Username or password is incorrect", http.StatusUnauthorized)
-		return
-	} else if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Username or password is incorrect"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		}
 		return
 	}
 
-	if user.Password != storedUser.Password { // match the password
-		utils.HandleError(c, "Username or password is incorrect", http.StatusUnauthorized)
+	err = bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Username or password is incorrect"})
 		return
 	}
 
@@ -45,7 +65,7 @@ func Login(c *gin.Context) {
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 

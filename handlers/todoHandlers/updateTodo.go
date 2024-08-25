@@ -1,49 +1,47 @@
 package todoHandlers
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
+	"strings"
 	"todo-list/models"
 	"todo-list/services"
 	"todo-list/utils"
+	"todo-list/validators"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func UpdateTodo(c *gin.Context) {
-	t, _ := c.Get("todo")
-	todo := t.(*models.Todo)
+	todo := &models.Todo{}
 
-	todoId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusBadRequest)
+	if err := c.ShouldBindJSON(todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "could not parse json body"})
 		return
 	}
 
-	storedTodo := &models.Todo{}
-	err = services.GetTodo(todoId, storedTodo)
+	todo.Title = strings.TrimSpace(todo.Title)
+	todo.Status = strings.TrimSpace(todo.Status)
 
-	if err == sql.ErrNoRows {
-		utils.HandleError(c, "Todo not found", http.StatusNotFound)
+	if err := validators.Validate.Struct(todo); err != nil {
+		errs := err.(validator.ValidationErrors)
+		c.JSON(http.StatusBadRequest, utils.FormatValidationError(errs))
 		return
-	} else if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	todoId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
 	userId := c.GetInt("userId")
 
-	//	check to match the userId
-	if userId != storedTodo.UserId {
-		utils.HandleError(c, "Your not authorized to update this todo", http.StatusForbidden)
-		return
-	}
-
-	err = services.UpdateTodo(todo, todoId)
+	err = services.UpdateTodo(todo, todoId, userId)
 
 	if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 

@@ -10,10 +10,11 @@ import (
 func SetupTodosRoutes(router *gin.Engine) {
 	todoRouter := router.Group("/todos")
 	todoRouter.Use(middleware.IsAuth)
-
-	todoRouter.GET("/", todoHandlers.GetAllTodo)
-	todoRouter.POST("/", middleware.TodoBodyValidator, todoHandlers.CreateTodo)
-	todoRouter.GET("/:id", todoHandlers.GetTodo)
-	todoRouter.PUT("/:id", middleware.TodoBodyValidator, todoHandlers.UpdateTodo)
-	todoRouter.DELETE("/:id", todoHandlers.DeleteTodo)
+	{
+		todoRouter.GET("/", todoHandlers.GetAllTodo)
+		todoRouter.POST("/", todoHandlers.CreateTodo)
+		todoRouter.GET("/:id", todoHandlers.GetTodo)
+		todoRouter.PUT("/:id", todoHandlers.UpdateTodo)
+		todoRouter.DELETE("/:id", todoHandlers.DeleteTodo)
+	}
 }

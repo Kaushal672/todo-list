@@ -1,39 +1,33 @@
 package todoHandlers
 
 import (
-	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	"todo-list/models"
 	"todo-list/services"
-	"todo-list/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetTodo(c *gin.Context) {
-	// get todoId from route param
 	todoId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	storedTodo := &models.Todo{}
-	err = services.GetTodo(todoId, storedTodo) // retrieve todo from db
-
-	if err == sql.ErrNoRows {
-		utils.HandleError(c, "Todo not found", http.StatusNotFound)
-		return
-	} else if err != nil {
-		utils.HandleError(c, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
 	userId := c.GetInt("userId")
 
-	if userId != storedTodo.UserId {
-		utils.HandleError(c, "Your not authorized to view this todo", http.StatusForbidden)
+	storedTodo := &models.Todo{}
+	err = services.GetTodo(todoId, userId, storedTodo) // retrieve todo from db
+
+	if err != nil {
+		if errors.Is(err, models.ErrTodoNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		}
 		return
 	}
 
