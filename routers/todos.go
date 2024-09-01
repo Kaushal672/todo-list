@@ -1,20 +1,21 @@
 package routers
 
 import (
-	"todo-list/handlers/todoHandlers"
+	"todo-list/handlers"
 	"todo-list/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupTodosRoutes(router *gin.Engine) {
+func SetupTodosRoutes(router *gin.Engine, handler *handlers.Handlers) {
+
 	todoRouter := router.Group("/todos")
-	todoRouter.Use(middleware.IsAuth)
+	todoRouter.Use(middleware.IsAuth(handler.TokengRPCClient))
 	{
-		todoRouter.GET("/", todoHandlers.GetAllTodo)
-		todoRouter.POST("/", todoHandlers.CreateTodo)
-		todoRouter.GET("/:id", todoHandlers.GetTodo)
-		todoRouter.PUT("/:id", todoHandlers.UpdateTodo)
-		todoRouter.DELETE("/:id", todoHandlers.DeleteTodo)
+		todoRouter.GET("/", handler.GetAllTodo)
+		todoRouter.POST("/", handler.CreateTodo)
+		todoRouter.GET("/:id", handler.GetTodo)
+		todoRouter.PUT("/:id", handler.UpdateTodo)
+		todoRouter.DELETE("/:id", handler.DeleteTodo)
 	}
 }

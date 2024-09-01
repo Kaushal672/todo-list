@@ -1,35 +1,32 @@
-package authHandlers
+package handlers
 
 import (
 	"errors"
 	"net/http"
 	"strings"
 	"todo-list/models"
-	"todo-list/services"
+	"todo-list/service"
 	"todo-list/utils"
-	"todo-list/validators"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Signup(c *gin.Context) {
+func (h *Handlers) Signup(c *gin.Context) {
 	user := &models.User{}
 
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "could not parse json body"})
+	if err := c.ShouldBindJSON(user); err != nil {
+		if e, ok := err.(validator.ValidationErrors); ok {
+			c.JSON(http.StatusBadRequest, utils.FormatValidationError(e))
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "could not parse json body"})
+		}
 		return
 	}
 
 	user.Name = strings.TrimSpace(user.Name)
 	user.Password = strings.TrimSpace(user.Password)
-
-	if err := validators.Validate.Struct(user); err != nil {
-		errs := err.(validator.ValidationErrors)
-		c.JSON(http.StatusBadRequest, utils.FormatValidationError(errs))
-		return
-	}
 
 	// hash password
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -43,16 +40,16 @@ func Signup(c *gin.Context) {
 	user.Password = string(hash)
 
 	// Insert the new user details
-	err = services.AddUser(user)
+	err = h.UserService.AddUser(user)
 
 	if err != nil {
-		if errors.Is(err, models.ErrDuplicateUniqueKey) {
+		if errors.Is(err, service.ErrDuplicateUniqueKey) {
 			c.JSON(http.StatusConflict, gin.H{"message": "User already exists"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
 		}
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User signup successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "User signup successfull"})
 }
