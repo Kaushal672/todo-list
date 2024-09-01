@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option go_package = "./protogen/token";
+
+service Token {
+  rpc CreateToken(UserId) returns (TokenString) {};
+  rpc VerifyToken(TokenString) returns (UserId) {};
+}
+
+message UserId { int64 userId = 1; }
+
+message TokenString { string token = 1; }

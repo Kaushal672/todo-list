@@ -14,3 +14,5 @@ migrate_fix:
 create_migration:
 	migrate create -ext sql -dir database/migrations/ -seq create_todos_table
 
+protoc:
+	cd proto && protoc --go_out=../ --go-grpc_out=require_unimplemented_servers=false:../ *.proto
