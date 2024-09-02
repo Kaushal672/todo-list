@@ -52,6 +52,16 @@ func TestLogin(t *testing.T) {
 			code:     http.StatusOK,
 			want:     gin.H{"message": "User logged in successfully"},
 		},
+		"Invalid Json body": {
+			requestBody: gin.H{
+				"name":     1234,
+				"password": "K@ubb123b",
+			},
+			dbErr:    mock.OK,
+			tokenErr: mock.StatusOkInTokenService,
+			code:     http.StatusBadRequest,
+			want:     gin.H{"message": "could not parse json body"},
+		},
 		"User not found": {
 			requestBody: gin.H{
 				"name":     "unknown",
@@ -180,6 +190,16 @@ func TestLogin(t *testing.T) {
 				"password": "K@ubb123",
 			},
 			dbErr:    mock.OK,
+			tokenErr: mock.StatusOkInTokenService,
+			code:     http.StatusUnauthorized,
+			want:     gin.H{"message": "Username or password is incorrect"},
+		},
+		"User not found from DB": {
+			requestBody: gin.H{
+				"name":     "Kaushal",
+				"password": "K@ubb123",
+			},
+			dbErr:    mock.DBNotFoundInUser,
 			tokenErr: mock.StatusOkInTokenService,
 			code:     http.StatusUnauthorized,
 			want:     gin.H{"message": "Username or password is incorrect"},

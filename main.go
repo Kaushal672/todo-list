@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 	"todo-list/database"
+	"todo-list/grpcClient"
 	"todo-list/handlers"
-	"todo-list/protogen/token"
 	"todo-list/routers"
 	"todo-list/service"
 	"todo-list/validators"
@@ -13,8 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func init() {
@@ -25,20 +23,19 @@ func init() {
 }
 
 func main() {
-	var conn *grpc.ClientConn
-	conn, err := grpc.NewClient(":8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	tokenClient, conn, err := grpcClient.CreateGrpcClient()
 
 	if err != nil {
-		log.Fatal("Error in client connection", err)
+		log.Fatal("Error while creating gRPC client ", err)
 	}
-	defer conn.Close()
 
-	t := token.NewTokenClient(conn)
+	defer conn.Close()
 
 	router := gin.New()
 	userService := &service.UserServices{DB: database.DB}
 	todoService := &service.TodoServices{DB: database.DB}
-	handler := handlers.NewHandler(todoService, userService, t)
+	handler := handlers.NewHandler(todoService, userService, tokenClient)
 
 	routers.SetupAuthRoutes(router, handler)
 	routers.SetupTodosRoutes(router, handler)

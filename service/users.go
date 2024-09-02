@@ -16,7 +16,7 @@ var (
 )
 
 type UserManager interface {
-	GetUser(user *models.User, storedUser *models.User) error
+	GetUser(user *models.User) (*models.User, error)
 	AddUser(user *models.User) error
 }
 
@@ -24,22 +24,23 @@ type UserServices struct {
 	DB *sql.DB
 }
 
-func (us *UserServices) GetUser(user *models.User, storedUser *models.User) error {
+func (us *UserServices) GetUser(user *models.User) (*models.User, error) {
 	query := "SELECT userId, username, password, createdAt, updatedAt FROM users WHERE username = $1"
+	var resUser models.User
 	err := us.DB.QueryRow(query, user.Name).
-		Scan(&storedUser.UserId,
-			&storedUser.Name,
-			&storedUser.Password,
-			&storedUser.CreatedAt,
-			&storedUser.UpdatedAt)
+		Scan(&resUser.UserId,
+			&resUser.Name,
+			&resUser.Password,
+			&resUser.CreatedAt,
+			&resUser.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ErrUserNotFound
+			return nil, ErrUserNotFound
 		}
-		return ErrGetUser
+		return nil, ErrGetUser
 	}
 
-	return nil
+	return &resUser, nil
 }
 
 func (us *UserServices) AddUser(user *models.User) error {

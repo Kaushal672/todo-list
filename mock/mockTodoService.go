@@ -39,22 +39,22 @@ func (s *MockTodoService) DeleteTodo(todoId int, userId int64) error {
 	return nil
 }
 
-func (s *MockTodoService) GetTodo(todoId int, userId int64, storedTodo *models.Todo) error {
+func (s *MockTodoService) GetTodo(todoId int, userId int64) (*models.Todo, error) {
 	if s.Err == DBNotFoundInTodos {
-		return service.ErrTodoNotFound
+		return nil, service.ErrTodoNotFound
 	}
 	if s.Err == DBOperationError {
-		return service.ErrGetTodo
+		return nil, service.ErrGetTodo
 	}
 
-	storedTodo.Title = "Test Todo 1"
-	storedTodo.Status = "completed"
-	storedTodo.UserId = 1
-	storedTodo.TodoId = 1
-	storedTodo.CreatedAt = MockTime
-	storedTodo.UpdatedAt = &MockTime
-
-	return nil
+	return &models.Todo{
+		Title:     "Test Todo 1",
+		Status:    "completed",
+		UserId:    1,
+		TodoId:    1,
+		CreatedAt: &MockTime,
+		UpdatedAt: &MockTime,
+	}, nil
 }
 
 func (s *MockTodoService) UpdateTodo(todo *models.Todo, todoId int, userId int64) error {
@@ -75,7 +75,7 @@ func (s *MockTodoService) GetAllTodo(userId int64) ([]models.Todo, error) {
 			Title:     "Test Todo 1",
 			Status:    "completed",
 			UserId:    1,
-			CreatedAt: MockTime,
+			CreatedAt: &MockTime,
 			UpdatedAt: &MockTime,
 		},
 	}, nil

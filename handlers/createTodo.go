@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 	"todo-list/models"
-	"todo-list/protogen/token"
 	"todo-list/service"
 	"todo-list/utils"
+	"token-management-service/protogen/token"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

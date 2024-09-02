@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
-	"todo-list/protogen/token"
+	"token-management-service/protogen/token"
 
 	"google.golang.org/grpc"
 )

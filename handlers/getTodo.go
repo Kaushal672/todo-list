@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"todo-list/models"
 	"todo-list/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +18,7 @@ func (h *Handlers) GetTodo(c *gin.Context) {
 
 	userId := c.GetInt64("userId")
 
-	storedTodo := &models.Todo{}
-	err = h.TodoService.GetTodo(todoId, userId, storedTodo)
+	todo, err := h.TodoService.GetTodo(todoId, userId)
 
 	if err != nil {
 		if errors.Is(err, service.ErrTodoNotFound) {
@@ -31,5 +29,5 @@ func (h *Handlers) GetTodo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"result": storedTodo})
+	c.JSON(http.StatusOK, gin.H{"result": todo})
 }

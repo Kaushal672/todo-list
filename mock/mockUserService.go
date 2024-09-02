@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"database/sql"
 	"todo-list/models"
 	"todo-list/service"
 
@@ -12,22 +11,22 @@ type MockUserService struct {
 	Err ErrMock
 }
 
-func (m *MockUserService) GetUser(user *models.User, storedUser *models.User) error {
-	if m.Err == DBNotFoundInTodos {
-		return service.ErrUserNotFound
+func (m *MockUserService) GetUser(user *models.User) (*models.User, error) {
+	if m.Err == DBNotFoundInUser {
+		return nil, service.ErrUserNotFound
 	}
 
 	if m.Err == DBOperationError {
-		return service.ErrGetUser
+		return nil, service.ErrGetUser
 	}
 
-	storedUser.Name = "Kaushal"
-	storedUser.Password = GenerateHashedPassword("K@ubb123b")
-	storedUser.CreatedAt = MockTime
-	storedUser.UpdatedAt = sql.NullTime{Valid: false, Time: MockTime}
-	storedUser.UserId = 1
-
-	return nil
+	return &models.User{
+		Name:      "Kaushal",
+		Password:  GenerateHashedPassword("K@ubb123b"),
+		CreatedAt: &MockTime,
+		UpdatedAt: &MockTime,
+		UserId:    1,
+	}, nil
 }
 
 func (m *MockUserService) AddUser(user *models.User) error {

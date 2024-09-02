@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"todo-list/protogen/token"
+	"token-management-service/protogen/token"
 
 	"github.com/gin-gonic/gin"
 )

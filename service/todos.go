@@ -19,7 +19,7 @@ var (
 type TodoManager interface {
 	AddTodo(todo *models.Todo, userId int64) error
 	DeleteTodo(todoId int, userId int64) error
-	GetTodo(todoId int, userId int64, storedTodo *models.Todo) error
+	GetTodo(todoId int, userId int64) (*models.Todo, error)
 	UpdateTodo(todo *models.Todo, todoId int, userId int64) error
 	GetAllTodo(userId int64) ([]models.Todo, error)
 }
@@ -59,24 +59,25 @@ func (ts *TodoServices) DeleteTodo(todoId int, userId int64) error {
 	return nil
 }
 
-func (ts *TodoServices) GetTodo(todoId int, userId int64, storedTodo *models.Todo) error {
+func (ts *TodoServices) GetTodo(todoId int, userId int64) (*models.Todo, error) {
 	query := "SELECT todoId, title, currentStatus, userId, createdAt, updatedAt FROM todos WHERE todoId = $1 AND userId = $2"
+	var resTodo models.Todo
 	err := ts.DB.QueryRow(query, todoId, userId).
-		Scan(&storedTodo.TodoId,
-			&storedTodo.Title,
-			&storedTodo.Status,
-			&storedTodo.UserId,
-			&storedTodo.CreatedAt,
-			&storedTodo.UpdatedAt)
+		Scan(&resTodo.TodoId,
+			&resTodo.Title,
+			&resTodo.Status,
+			&resTodo.UserId,
+			&resTodo.CreatedAt,
+			&resTodo.UpdatedAt)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) { //FIX use errors.Is() direct return err
-			return ErrTodoNotFound
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTodoNotFound
 		}
-		return ErrGetTodo
+		return nil, ErrGetTodo
 	}
 
-	return nil // check for err no rows, categorize the error, client should get generic error
+	return &resTodo, nil // check for err no rows, categorize the error, client should get generic error
 }
 
 func (ts *TodoServices) UpdateTodo(todo *models.Todo, todoId int, userId int64) error {

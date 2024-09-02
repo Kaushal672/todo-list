@@ -50,6 +50,15 @@ func TestSignup(t *testing.T) {
 			code:  http.StatusOK,
 			want:  gin.H{"message": "User signup successfull"},
 		},
+		"Invalid json body": {
+			requestBody: gin.H{
+				"name":     1234,
+				"password": "K@ubb123",
+			},
+			dbErr: mock.OK,
+			code:  http.StatusBadRequest,
+			want:  gin.H{"message": "could not parse json body"},
+		},
 		"Failed validation: name is required": {
 			requestBody: gin.H{"password": "K@ubb123b"},
 			dbErr:       mock.OK,

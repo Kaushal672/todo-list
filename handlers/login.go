@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 	"todo-list/models"
-	"todo-list/protogen/token"
 	"todo-list/service"
 	"todo-list/utils"
+	"token-management-service/protogen/token"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -31,9 +31,8 @@ func (h *Handlers) Login(c *gin.Context) {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Password = strings.TrimSpace(user.Password)
 
-	storedUser := &models.User{}
 	// get the registered user data
-	err := h.UserService.GetUser(user, storedUser) // handlers interface with struct,
+	storedUser, err := h.UserService.GetUser(user) // handlers interface with struct,
 
 	if err != nil {
 		if errors.Is(err, service.ErrUserNotFound) {
